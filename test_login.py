@@ -5,11 +5,15 @@ from telegram.ext import Application, CommandHandler, MessageHandler, CallbackCo
 import requests
 from bs4 import BeautifulSoup
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Load the bot token from the environment variable
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 if not BOT_TOKEN:
-    raise ValueError("No BOT_TOKEN provided. Please set the BOT_TOKEN environment variable.")
+    raise ValueError("No BOT_TOKEN provided. Please set the BOT_TOKEN environment variable or create a .env file.")
 
 # Portal URL
 PORTAL_URL = "https://cuportal.covenantuniversity.edu.ng/studentdashboard.php"
@@ -98,17 +102,18 @@ async def main():
     application.add_handler(CommandHandler("stop", stop))
     application.add_handler(MessageHandler(None, handle_credentials))  # Use None instead of Filters.text
 
-    # Set webhook
-    WEBHOOK_URL = os.getenv("WEBHOOK_URL")
-    await application.bot.set_webhook(WEBHOOK_URL)
+    # Start the bot using polling (for local testing)
+    await application.initialize()
+    await application.start()
+    await application.updater.start_polling()
 
-    # Start the bot
-    await application.run_webhook(
-        listen="0.0.0.0",
-        port=int(os.getenv("PORT", 10000)),  # Use the PORT environment variable
-        url_path="/webhook",
-        webhook_url=WEBHOOK_URL
-    )
+    # Keep the bot running
+    await application.idle()
+
+    # Stop the bot gracefully
+    await application.stop()
+    await application.updater.stop()
+    await application.shutdown()
 
 if __name__ == "__main__":
     try:
@@ -125,4 +130,5 @@ if __name__ == "__main__":
     finally:
         # Clean up the event loop
         if not loop.is_closed():
+            loop.run_until_complete(application.shutdown())
             loop.close()
