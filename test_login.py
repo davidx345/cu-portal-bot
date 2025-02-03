@@ -126,6 +126,7 @@ if __name__ == "__main__":
         print("Bot stopped by user.")
     finally:
         # Clean up the event loop
-        if not asyncio.get_event_loop().is_closed():
-            asyncio.run(application.shutdown())
-            asyncio.get_event_loop().close()
+        loop = asyncio.get_event_loop()
+        if not loop.is_closed():
+            loop.run_until_complete(application.shutdown())
+            loop.close()
