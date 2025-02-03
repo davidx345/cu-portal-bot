@@ -105,8 +105,8 @@ async def main():
     application.add_handler(CommandHandler("stop", stop))
     application.add_handler(MessageHandler(None, handle_credentials))  # Use None instead of Filters.text
 
-    # Set webhook
-    await application.bot.set_webhook(WEBHOOK_URL)
+    # Set webhook with increased timeout
+    await application.bot.set_webhook(WEBHOOK_URL, timeout=60)
 
     # Start the bot using webhook
     await application.run_webhook(
