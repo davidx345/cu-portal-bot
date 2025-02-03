@@ -5,11 +5,10 @@ from telegram.ext import Application, CommandHandler, MessageHandler, CallbackCo
 import requests
 from bs4 import BeautifulSoup
 import sys
-import asyncio
+import os
 
-# Load the bot token from the environment file
-with open('Bot.token.env', 'r') as file:
-    BOT_TOKEN = file.read().strip()
+# Load the bot token from the environment variable
+BOT_TOKEN = os.getenv('BOT_TOKEN')
 
 # Portal URL
 PORTAL_URL = "https://cuportal.covenantuniversity.edu.ng/studentdashboard.php"
@@ -97,5 +96,14 @@ if __name__ == "__main__":
     application.add_handler(CommandHandler("stop", stop))
     application.add_handler(MessageHandler(None, handle_credentials))  # Use None instead of Filters.text
 
+    # Set webhook
+    WEBHOOK_URL = "https://your-render-app-url/webhook"
+    application.bot.set_webhook(WEBHOOK_URL)
+
     # Start the bot
-    application.run_polling()
+    application.run_webhook(
+        listen="0.0.0.0",
+        port=int(os.environ.get("PORT", 5000)),
+        url_path="/webhook",
+        webhook_url=WEBHOOK_URL
+    )

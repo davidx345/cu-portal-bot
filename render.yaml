@@ -5,3 +5,6 @@ services:
     plan: free
     buildCommand: ""
     startCommand: "python test_login.py"
+    envVars:
+      - key: BOT_TOKEN
+        value: "7705015733:AAHfQt0Ar2Y7ECVqMhxk45o4xRg9OhFlunQ"
