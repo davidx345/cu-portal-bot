@@ -58,7 +58,7 @@ def fetch_portal_data(username, password):
         return None
 
 # Function to check for changes and notify the user
-def check_for_changes(chat_id, username, password):
+def check_for_changes(application, chat_id, username, password):
     global last_data
     while True:
         current_data = fetch_portal_data(username, password)
@@ -85,7 +85,7 @@ async def handle_credentials(update: Update, context: CallbackContext):
         username, password = text.split(" ", 1)
         user_credentials[chat_id] = {"username": username, "password": password}
         await update.message.reply_text("Credentials saved. Monitoring started.")
-        threading.Thread(target=check_for_changes, args=(chat_id, username, password)).start()
+        threading.Thread(target=check_for_changes, args=(application, chat_id, username, password)).start()
     else:
         await update.message.reply_text("Invalid format. Please provide username and password separated by a space.")
 
@@ -96,6 +96,7 @@ async def stop(update: Update, context: CallbackContext):
 
 # Main function
 async def main():
+    global application
     # Initialize the Application
     application = Application.builder().token(BOT_TOKEN).build()
 
@@ -105,7 +106,7 @@ async def main():
     application.add_handler(MessageHandler(None, handle_credentials))  # Use None instead of Filters.text
 
     # Set webhook
-    WEBHOOK_URL = "https://your-render-app-url/webhook"
+    WEBHOOK_URL = "https://cu-portal-bot.onrender.com/"
     await application.bot.set_webhook(WEBHOOK_URL)
 
     # Start the bot
