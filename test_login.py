@@ -18,6 +18,9 @@ if not BOT_TOKEN:
 # Portal URL
 PORTAL_URL = "https://cuportal.covenantuniversity.edu.ng/studentdashboard.php"
 
+# Webhook URL
+WEBHOOK_URL = "https://cu-portal-bot.onrender.com/webhook"
+
 # User credentials storage (for demonstration purposes; use a secure method in production)
 user_credentials = {}
 last_data = {}
@@ -102,18 +105,16 @@ async def main():
     application.add_handler(CommandHandler("stop", stop))
     application.add_handler(MessageHandler(None, handle_credentials))  # Use None instead of Filters.text
 
-    # Start the bot using polling (for local testing)
-    await application.initialize()
-    await application.start()
-    await application.updater.start_polling()
+    # Set webhook
+    await application.bot.set_webhook(WEBHOOK_URL)
 
-    # Keep the bot running
-    await application.idle()
-
-    # Stop the bot gracefully
-    await application.stop()
-    await application.updater.stop()
-    await application.shutdown()
+    # Start the bot using webhook
+    await application.run_webhook(
+        listen="0.0.0.0",
+        port=int(os.environ.get("PORT", 5000)),
+        url_path="/webhook",
+        webhook_url=WEBHOOK_URL
+    )
 
 if __name__ == "__main__":
     try:
