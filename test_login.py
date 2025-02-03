@@ -6,6 +6,7 @@ import requests
 from bs4 import BeautifulSoup
 import sys
 import os
+import asyncio
 
 # Load the bot token from the environment variable or from the BOT_TOKEN.env file
 BOT_TOKEN = os.getenv('BOT_TOKEN')
@@ -94,7 +95,7 @@ async def stop(update: Update, context: CallbackContext):
     await application.stop()
 
 # Main function
-if __name__ == "__main__":
+async def main():
     # Initialize the Application
     application = Application.builder().token(BOT_TOKEN).build()
 
@@ -105,7 +106,7 @@ if __name__ == "__main__":
 
     # Set webhook
     WEBHOOK_URL = "https://your-render-app-url/webhook"
-    application.bot.set_webhook(WEBHOOK_URL)
+    await application.bot.set_webhook(WEBHOOK_URL)
 
     # Start the bot
     application.run_webhook(
@@ -114,3 +115,6 @@ if __name__ == "__main__":
         url_path="/webhook",
         webhook_url=WEBHOOK_URL
     )
+
+if __name__ == "__main__":
+    asyncio.run(main())
