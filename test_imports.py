@@ -4,12 +4,9 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackContext
 import requests
 from bs4 import BeautifulSoup
-import sys
-import asyncio
 
-# Load the bot token from the environment file
-with open('Bot.token.env', 'r') as file:
-    BOT_TOKEN = file.read().strip()
+# Telegram Bot Token (replace with your actual token as a string)
+BOT_TOKEN = "7705015733:AAHfQt0Ar2Y7ECVqMhxk45o4xRg9OhFlunQ"  # Replace with your bot token
 
 # Portal URL
 PORTAL_URL = "https://cuportal.covenantuniversity.edu.ng/studentdashboard.php"
@@ -36,14 +33,14 @@ def fetch_portal_data(username, password):
         # Parse the dashboard content
         soup = BeautifulSoup(response.text, 'html.parser')
         data = {
-            "academic_planning": soup.find("div", {"id": "academic-planning"}).text.strip() if soup.find("div", {"id": "academic-planning"}) else "N/A",
-            "resumption": soup.find("div", {"id": "resumption"}).text.strip() if soup.find("div", {"id": "resumption"}) else "N/A",
-            "student_affairs": soup.find("div", {"id": "student-affairs"}).text.strip() if soup.find("div", {"id": "student-affairs"}) else "N/A",
-            "course_control": soup.find("div", {"id": "course-control"}).text.strip() if soup.find("div", {"id": "course-control"}) else "N/A",
-            "attendance": soup.find("div", {"id": "attendance"}).text.strip() if soup.find("div", {"id": "attendance"}) else "N/A",
-            "exam_conduct": soup.find("div", {"id": "exam-conduct"}).text.strip() if soup.find("div", {"id": "exam-conduct"}) else "N/A",
-            "result_upload": soup.find("div", {"id": "result-upload"}).text.strip() if soup.find("div", {"id": "result-upload"}) else "N/A",
-            "result_processing": soup.find("div", {"id": "result-processing"}).text.strip() if soup.find("div", {"id": "result-processing"}) else "N/A",
+            "academic_planning": soup.find("div", {"id": "academic-planning"}).text.strip(),
+            "resumption": soup.find("div", {"id": "resumption"}).text.strip(),
+            "student_affairs": soup.find("div", {"id": "student-affairs"}).text.strip(),
+            "course_control": soup.find("div", {"id": "course-control"}).text.strip(),
+            "attendance": soup.find("div", {"id": "attendance"}).text.strip(),
+            "exam_conduct": soup.find("div", {"id": "exam-conduct"}).text.strip(),
+            "result_upload": soup.find("div", {"id": "result-upload"}).text.strip(),
+            "result_processing": soup.find("div", {"id": "result-processing"}).text.strip(),
         }
         return data
     except Exception as e:
@@ -64,38 +61,34 @@ def check_for_changes(chat_id, username, password):
                 message = "Changes detected:\n" + "\n".join(changes)
                 application.bot.send_message(chat_id=chat_id, text=message)
         last_data[chat_id] = current_data
-        time.sleep(300)  # Check every 5 minutes
+        time.sleep(60)  # Check every minute
 
 # Start command handler
-async def start(update: Update, context: CallbackContext):
-    await update.message.reply_text("Welcome! Please provide your portal username and password separated by a space.")
+def start(update: Update, context: CallbackContext):
+    update.message.reply_text("Welcome! Please provide your portal username and password separated by a space.")
 
 # Handle user input for credentials
-async def handle_credentials(update: Update, context: CallbackContext):
+def handle_credentials(update: Update, context: CallbackContext):
     chat_id = update.message.chat_id
     text = update.message.text.strip()
     if " " in text:
         username, password = text.split(" ", 1)
         user_credentials[chat_id] = {"username": username, "password": password}
-        await update.message.reply_text("Credentials saved. Monitoring started.")
+        update.message.reply_text("Credentials saved. Monitoring started.")
         threading.Thread(target=check_for_changes, args=(chat_id, username, password)).start()
     else:
-        await update.message.reply_text("Invalid format. Please provide username and password separated by a space.")
-
-# Stop command handler
-async def stop(update: Update, context: CallbackContext):
-    await update.message.reply_text("Bot is stopping...")
-    await application.stop()
+        update.message.reply_text("Invalid format. Please provide username and password separated by a space.")
 
 # Main function
 if __name__ == "__main__":
     # Initialize the Application
     application = Application.builder().token(BOT_TOKEN).build()
 
+    dispatcher = application.dispatcher
+
     # Add handlers
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("stop", stop))
-    application.add_handler(MessageHandler(None, handle_credentials))  # Use None instead of Filters.text
+    dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(MessageHandler(None, handle_credentials))  # Use None instead of Filters.text
 
     # Start the bot
     application.run_polling()
