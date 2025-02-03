@@ -7,8 +7,15 @@ from bs4 import BeautifulSoup
 import sys
 import os
 
-# Load the bot token from the environment variable
+# Load the bot token from the environment variable or from the BOT_TOKEN.env file
 BOT_TOKEN = os.getenv('BOT_TOKEN')
+
+if not BOT_TOKEN:
+    try:
+        with open('BOT_TOKEN.env', 'r') as file:
+            BOT_TOKEN = file.read().strip()
+    except FileNotFoundError:
+        raise ValueError("No BOT_TOKEN provided. Please set the BOT_TOKEN environment variable or create a BOT_TOKEN.env file.")
 
 # Portal URL
 PORTAL_URL = "https://cuportal.covenantuniversity.edu.ng/studentdashboard.php"
