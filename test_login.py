@@ -1,22 +1,15 @@
 import time
-import threading
+import asyncio
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackContext
 import requests
 from bs4 import BeautifulSoup
-import sys
 import os
-import asyncio
 
-# Load the bot token from the environment variable or from the BOT_TOKEN.env file
+# Load the bot token from the environment variable
 BOT_TOKEN = os.getenv('BOT_TOKEN')
-
 if not BOT_TOKEN:
-    try:
-        with open('BOT_TOKEN.env', 'r') as file:
-            BOT_TOKEN = file.read().strip()
-    except FileNotFoundError:
-        raise ValueError("No BOT_TOKEN provided. Please set the BOT_TOKEN environment variable or create a BOT_TOKEN.env file.")
+    raise ValueError("No BOT_TOKEN provided. Please set the BOT_TOKEN environment variable.")
 
 # Portal URL
 PORTAL_URL = "https://cuportal.covenantuniversity.edu.ng/studentdashboard.php"
@@ -58,7 +51,7 @@ def fetch_portal_data(username, password):
         return None
 
 # Function to check for changes and notify the user
-def check_for_changes(application, chat_id, username, password):
+async def check_for_changes(application, chat_id, username, password):
     global last_data
     while True:
         current_data = fetch_portal_data(username, password)
@@ -69,9 +62,9 @@ def check_for_changes(application, chat_id, username, password):
                     if last_data[chat_id].get(key) != value:
                         changes.append(f"{key.replace('_', ' ').title()}: {value}")
                 message = "Changes detected:\n" + "\n".join(changes)
-                application.bot.send_message(chat_id=chat_id, text=message)
+                await application.bot.send_message(chat_id=chat_id, text=message)
         last_data[chat_id] = current_data
-        time.sleep(300)  # Check every 5 minutes
+        await asyncio.sleep(300)  # Check every 5 minutes
 
 # Start command handler
 async def start(update: Update, context: CallbackContext):
@@ -85,7 +78,7 @@ async def handle_credentials(update: Update, context: CallbackContext):
         username, password = text.split(" ", 1)
         user_credentials[chat_id] = {"username": username, "password": password}
         await update.message.reply_text("Credentials saved. Monitoring started.")
-        threading.Thread(target=check_for_changes, args=(application, chat_id, username, password)).start()
+        asyncio.create_task(check_for_changes(application, chat_id, username, password))
     else:
         await update.message.reply_text("Invalid format. Please provide username and password separated by a space.")
 
@@ -106,26 +99,30 @@ async def main():
     application.add_handler(MessageHandler(None, handle_credentials))  # Use None instead of Filters.text
 
     # Set webhook
-    WEBHOOK_URL = "https://cu-portal-bot.onrender.com/webhook"
+    WEBHOOK_URL = os.getenv("WEBHOOK_URL")
     await application.bot.set_webhook(WEBHOOK_URL)
 
     # Start the bot
-    application.run_webhook(
+    await application.run_webhook(
         listen="0.0.0.0",
-        port=int(os.environ.get("PORT", 5000)),
+        port=int(os.getenv("PORT", 10000)),  # Use the PORT environment variable
         url_path="/webhook",
         webhook_url=WEBHOOK_URL
     )
 
 if __name__ == "__main__":
     try:
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            loop.create_task(main())
-        else:
-            loop.run_until_complete(main())
-    except RuntimeError as e:
-        print(f"RuntimeError: {e}")
+        # Create a new event loop
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
+
+        # Run the bot
         loop.run_until_complete(main())
+    except RuntimeError as e:
+        print(f"RuntimeError: {e}")
+    except KeyboardInterrupt:
+        print("Bot stopped by user.")
+    finally:
+        # Clean up the event loop
+        if not loop.is_closed():
+            loop.close()
