@@ -118,18 +118,14 @@ async def main():
 
 if __name__ == "__main__":
     try:
-        # Create a new event loop
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-
         # Run the bot
-        loop.run_until_complete(main())
+        asyncio.run(main())
     except RuntimeError as e:
         print(f"RuntimeError: {e}")
     except KeyboardInterrupt:
         print("Bot stopped by user.")
     finally:
         # Clean up the event loop
-        if not loop.is_closed():
-            loop.run_until_complete(application.shutdown())
-            loop.close()
+        if not asyncio.get_event_loop().is_closed():
+            asyncio.run(application.shutdown())
+            asyncio.get_event_loop().close()
