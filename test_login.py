@@ -106,7 +106,7 @@ async def main():
     application.add_handler(MessageHandler(None, handle_credentials))  # Use None instead of Filters.text
 
     # Set webhook
-    WEBHOOK_URL = "https://cu-portal-bot.onrender.com/"
+    WEBHOOK_URL = "https://cu-portal-bot.onrender.com/webhook"
     await application.bot.set_webhook(WEBHOOK_URL)
 
     # Start the bot
@@ -118,4 +118,5 @@ async def main():
     )
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
