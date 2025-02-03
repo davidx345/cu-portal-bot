@@ -1,27 +1,22 @@
 import time
 import asyncio
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, CallbackContext, filters
+from telegram.ext import Application, CommandHandler, MessageHandler, CallbackContext
 import requests
 from bs4 import BeautifulSoup
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
+# Load environment variables
 load_dotenv()
 
-# Load the bot token from the environment variable
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 if not BOT_TOKEN:
     raise ValueError("No BOT_TOKEN provided. Please set the BOT_TOKEN environment variable or create a .env file.")
 
-# Portal URL
 PORTAL_URL = "https://cuportal.covenantuniversity.edu.ng/studentdashboard.php"
-
-# Webhook URL
 WEBHOOK_URL = "https://cu-portal-bot.onrender.com/webhook"
 
-# User credentials storage (for demonstration purposes; use a secure method in production)
 user_credentials = {}
 last_data = {}
 
@@ -29,6 +24,7 @@ last_data = {}
 def fetch_portal_data(username, password):
     try:
         session = requests.Session()
+        # Simulate login (adjust based on the actual login mechanism of the portal)
         login_payload = {
             "username": username,
             "password": password
@@ -84,23 +80,25 @@ async def handle_credentials(update: Update, context: CallbackContext):
         username, password = text.split(" ", 1)
         user_credentials[chat_id] = {"username": username, "password": password}
         await update.message.reply_text("Credentials saved. Monitoring started.")
-        asyncio.create_task(check_for_changes(context.application, chat_id, username, password))
+        asyncio.create_task(check_for_changes(application, chat_id, username, password))
     else:
         await update.message.reply_text("Invalid format. Please provide username and password separated by a space.")
 
 # Stop command handler
 async def stop(update: Update, context: CallbackContext):
     await update.message.reply_text("Bot is stopping...")
+    await application.stop()
 
 # Main function
 async def main():
+    global application
     # Initialize the Application
     application = Application.builder().token(BOT_TOKEN).build()
 
     # Add handlers
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("stop", stop))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_credentials))  # FIXED
+    application.add_handler(MessageHandler(None, handle_credentials))  # Use None instead of Filters.text
 
     # Set webhook
     await application.bot.set_webhook(WEBHOOK_URL)
@@ -113,9 +111,17 @@ async def main():
         webhook_url=WEBHOOK_URL
     )
 
-# Entry point
 if __name__ == "__main__":
     try:
-        asyncio.run(main())  # FIXED: Properly handled event loop
+        # Run the bot
+        asyncio.run(main())
+    except RuntimeError as e:
+        print(f"RuntimeError: {e}")
     except KeyboardInterrupt:
         print("Bot stopped by user.")
+    finally:
+        # Clean up the event loop
+        loop = asyncio.get_event_loop()
+        if not loop.is_closed():
+            loop.run_until_complete(application.shutdown())
+            loop.close()
