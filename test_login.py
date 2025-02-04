@@ -117,18 +117,14 @@ async def main():
     # Set webhook
     await application.bot.set_webhook(WEBHOOK_URL)
 
-    # Start the bot
-    port = int(os.getenv("PORT", 5000))
-    await application.run_webhook(
-        listen="0.0.0.0",
-        port=port,
-        url_path="/webhook",
-        webhook_url=WEBHOOK_URL
-    )
+    # Start the Flask app
+    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
 
 if __name__ == "__main__":
     try:
-        # Use asyncio.run() to manage the event loop
+        # Run the bot
         asyncio.run(main())
+    except RuntimeError as e:
+        print(f"RuntimeError: {e}")
     except KeyboardInterrupt:
         print("Bot stopped by user.")
