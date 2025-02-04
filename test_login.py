@@ -30,7 +30,7 @@ def home():
 
 @app.route("/webhook", methods=['POST'])
 async def webhook():
-    update = Update.de_json(request.get_json(force=True), application.bot)
+    update = Update.de_json(await request.get_json(force=True), application.bot)
     await application.update_queue.put(update)
     return 'ok'
 
