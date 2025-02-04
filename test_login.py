@@ -6,7 +6,7 @@ import requests
 from bs4 import BeautifulSoup
 import os
 from dotenv import load_dotenv
-from flask import Flask, request
+from flask import Flask, request, jsonify
 
 # Load environment variables
 load_dotenv()
@@ -29,10 +29,20 @@ def home():
     return "Bot is running!"
 
 @app.route("/webhook", methods=['POST'])
-async def webhook():
-    update = Update.de_json(await request.get_json(force=True), application.bot)
-    await application.update_queue.put(update)
-    return 'ok'
+def webhook():
+    try:
+        data = request.json  # Get the JSON data from the request
+        print("Webhook received:", data)
+
+        # Process the incoming update
+        update = Update.de_json(data, application.bot)
+        asyncio.create_task(application.update_queue.put(update))
+
+        # Return a success response
+        return jsonify({"status": "success"}), 200
+    except Exception as e:
+        print("Error processing webhook:", e)
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 # Function to log in to the portal and fetch data
 def fetch_portal_data(username, password):
