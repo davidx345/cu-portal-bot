@@ -29,14 +29,14 @@ def home():
     return "Bot is running!"
 
 @app.route("/webhook", methods=['POST'])
-def webhook():
+async def webhook():
     try:
-        data = request.json  # Get the JSON data from the request
+        data = await request.get_json()  # Get the JSON data from the request
         print("Webhook received:", data)
 
         # Process the incoming update
         update = Update.de_json(data, application.bot)
-        asyncio.create_task(application.update_queue.put(update))
+        await application.update_queue.put(update)  # Await the coroutine
 
         # Return a success response
         return jsonify({"status": "success"}), 200
@@ -113,28 +113,18 @@ async def stop(update: Update, context: CallbackContext):
     await update.message.reply_text("Bot is stopping...")
     await application.stop()
 
-# Main function
-async def main():
-    global application
-    # Initialize the Application
-    application = Application.builder().token(BOT_TOKEN).build()
+# Initialize the Telegram bot application
+application = Application.builder().token(BOT_TOKEN).build()
 
-    # Add handlers
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("stop", stop))
-    application.add_handler(MessageHandler(None, handle_credentials))  # Use None instead of Filters.text
+# Add handlers
+application.add_handler(CommandHandler("start", start))
+application.add_handler(CommandHandler("stop", stop))
+application.add_handler(MessageHandler(None, handle_credentials))  # Use None instead of Filters.text
 
-    # Set webhook
-    await application.bot.set_webhook(WEBHOOK_URL)
-
-    # Start the Flask app
-    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
-
+# Run the Flask app and Telegram bot
 if __name__ == "__main__":
-    try:
-        # Run the bot
-        asyncio.run(main())
-    except RuntimeError as e:
-        print(f"RuntimeError: {e}")
-    except KeyboardInterrupt:
-        print("Bot stopped by user.")
+    # Set webhook
+    asyncio.run(application.bot.set_webhook(WEBHOOK_URL))
+
+    # Run the Flask app
+    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))

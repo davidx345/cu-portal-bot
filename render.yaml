@@ -3,7 +3,7 @@ services:
     name: cu-portal-bot
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn --bind 0.0.0.0:5000 test_login:app
+    startCommand: gunicorn -w 4 -k uvicorn.workers.UvicornWorker test_login:app
     envVars:
       - key: BOT_TOKEN
         value: "7705015733:AAHfQt0Ar2Y7ECVqMhxk45o4xRg9OhFlunQ"
