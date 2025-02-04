@@ -16,13 +16,23 @@ if not BOT_TOKEN:
     raise ValueError("No BOT_TOKEN provided. Please set the BOT_TOKEN environment variable or create a .env file.")
 
 PORTAL_URL = "https://cuportal.covenantuniversity.edu.ng/studentdashboard.php"
-WEBHOOK_URL = "https://cu-portal-bot.onrender.com/webhook"
+WEBHOOK_URL = os.getenv("WEBHOOK_URL", "https://cu-portal-bot.onrender.com/webhook")
 
 user_credentials = {}
 last_data = {}
 
 # Initialize Flask app
 app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Bot is running!"
+
+@app.route("/webhook", methods=['POST'])
+async def webhook():
+    update = Update.de_json(request.get_json(force=True), application.bot)
+    await application.update_queue.put(update)
+    return 'ok'
 
 # Function to log in to the portal and fetch data
 def fetch_portal_data(username, password):
@@ -93,13 +103,6 @@ async def stop(update: Update, context: CallbackContext):
     await update.message.reply_text("Bot is stopping...")
     await application.stop()
 
-# Webhook route
-@app.route('/webhook', methods=['POST'])
-def webhook():
-    update = Update.de_json(request.get_json(force=True), application.bot)
-    application.update_queue.put(update)
-    return 'ok'
-
 # Main function
 async def main():
     global application
@@ -114,20 +117,18 @@ async def main():
     # Set webhook
     await application.bot.set_webhook(WEBHOOK_URL)
 
-    # Start the Flask app
-    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
+    # Start the bot
+    port = int(os.getenv("PORT", 5000))
+    await application.run_webhook(
+        listen="0.0.0.0",
+        port=port,
+        url_path="/webhook",
+        webhook_url=WEBHOOK_URL
+    )
 
 if __name__ == "__main__":
     try:
-        # Run the bot
+        # Use asyncio.run() to manage the event loop
         asyncio.run(main())
-    except RuntimeError as e:
-        print(f"RuntimeError: {e}")
     except KeyboardInterrupt:
         print("Bot stopped by user.")
-    finally:
-        # Clean up the event loop
-        loop = asyncio.get_event_loop()
-        if not loop.is_closed():
-            loop.run_until_complete(application.shutdown())
-            loop.close()
