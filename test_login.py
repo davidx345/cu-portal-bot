@@ -6,6 +6,7 @@ import requests
 from bs4 import BeautifulSoup
 import os
 from dotenv import load_dotenv
+from flask import Flask, request
 
 # Load environment variables
 load_dotenv()
@@ -19,6 +20,9 @@ WEBHOOK_URL = "https://cu-portal-bot.onrender.com/webhook"
 
 user_credentials = {}
 last_data = {}
+
+# Initialize Flask app
+app = Flask(__name__)
 
 # Function to log in to the portal and fetch data
 def fetch_portal_data(username, password):
@@ -89,6 +93,13 @@ async def stop(update: Update, context: CallbackContext):
     await update.message.reply_text("Bot is stopping...")
     await application.stop()
 
+# Webhook route
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    update = Update.de_json(request.get_json(force=True), application.bot)
+    application.update_queue.put(update)
+    return 'ok'
+
 # Main function
 async def main():
     global application
@@ -103,13 +114,8 @@ async def main():
     # Set webhook
     await application.bot.set_webhook(WEBHOOK_URL)
 
-    # Start the bot using webhook
-    await application.run_webhook(
-        listen="0.0.0.0",
-        port=int(os.getenv('PORT', 5000)),
-        url_path="/webhook",
-        webhook_url=WEBHOOK_URL
-    )
+    # Start the Flask app
+    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
 
 if __name__ == "__main__":
     try:
