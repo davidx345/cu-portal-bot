@@ -166,6 +166,10 @@ async def webhook():
         logger.error(f"Webhook error: {e}")
         return "error", 500
 
+@app.route("/")
+def index():
+    return "CU Portal Bot is running!"
+
 def main():
     """
     Initialize and configure the Telegram bot application

@@ -7,8 +7,12 @@ services:
     startCommand: "python test_login.py"
     envVars:
       - key: BOT_TOKEN
-        value: "7705015733:AAHfQt0Ar2Y7ECVqMhxk45o4xRg9OhFlunQ"
+        sync: false
+      - key: PORTAL_USERNAME
+        sync: false
+      - key: PORTAL_PASSWORD
+        sync: false
+      - key: WEBHOOK_URL
+        sync: false
       - key: PORT
         value: "5000"
-      - key: WEBHOOK_URL
-        value: "https://cu-portal-bot.onrender.com/webhook"
