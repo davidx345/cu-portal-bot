@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 import os
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify
+import flask
 
 # Load environment variables
 load_dotenv()
@@ -127,4 +128,4 @@ if __name__ == "__main__":
     asyncio.run(application.bot.set_webhook(WEBHOOK_URL))
 
     # Run the Flask app
-    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
+    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)), debug=True, use_reloader=False)
