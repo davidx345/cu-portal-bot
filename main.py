@@ -7,10 +7,10 @@ from bs4 import BeautifulSoup
 
 # Replace these with your credentials
 PORTAL_URL = "https://cuportal.covenantuniversity.edu.ng/login.php"
-USERNAME = "your_username"
-PASSWORD = "your_password"
+USERNAME = "2300823"
+PASSWORD = "Ayodele2603"
 TELEGRAM_TOKEN = "7705015733:AAHfQt0Ar2Y7ECVqMhxk45o4xRg9OhFlunQ"
-CHAT_ID = "your_chat_id"  # Get this by sending a message to your bot and visiting https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates
+CHAT_ID = "1967461367"  # Your actual chat ID
 
 # Initialize the Telegram bot
 bot = Bot(token=TELEGRAM_TOKEN)
