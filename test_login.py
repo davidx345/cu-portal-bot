@@ -18,15 +18,26 @@ logger = logging.getLogger(__name__)
 # Load environment variables
 load_dotenv()
 
+# Read webhook URL from file, with fallback to environment variable
+try:
+    with open('WEBHOOK_URL', 'r') as file:
+        WEBHOOK_URL = file.read().strip()
+except FileNotFoundError:
+    WEBHOOK_URL = os.getenv('WEBHOOK_URL')
+
 # Secure credential retrieval
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 PORTAL_USERNAME = os.getenv('PORTAL_USERNAME')
 PORTAL_PASSWORD = os.getenv('PORTAL_PASSWORD')
-WEBHOOK_URL = os.getenv('WEBHOOK_URL')
 
+# Validate all critical variables
 if not all([BOT_TOKEN, PORTAL_USERNAME, PORTAL_PASSWORD, WEBHOOK_URL]):
-    raise ValueError("Missing critical environment variables")
+    raise ValueError("Missing critical environment variables or webhook URL file")
 
+# Log the webhook URL for debugging
+logger.info(f"Webhook URL: {WEBHOOK_URL}")
+
+# Portal configuration
 PORTAL_URL = "https://cuportal.covenantuniversity.edu.ng/studentdashboard.php"
 
 # Global state management
